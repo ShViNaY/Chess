@@ -23,18 +23,29 @@ class GameManager {
             try {
                 const message = JSON.parse(data.toString());
                 console.log("received message", message.type);
-                if (message.type === messages_1.INIT_GAME) {
+                const messageType = typeof message.type === "string" ? message.type.toUpperCase() : "";
+                if (messageType === messages_1.INIT_GAME) {
                     if (this.pendingUser) {
-                        const game = new Games_1.Games(this.pendingUser, socket);
+                        const whitePlayer = this.pendingUser;
+                        const blackPlayer = socket;
+                        const game = new Games_1.Games(whitePlayer, blackPlayer);
                         this.games.push(game);
                         this.pendingUser = null;
+                        whitePlayer.send(JSON.stringify({
+                            type: messages_1.INIT_GAME,
+                            payload: { color: "white" },
+                        }));
+                        blackPlayer.send(JSON.stringify({
+                            type: messages_1.INIT_GAME,
+                            payload: { color: "black" },
+                        }));
                     }
                     else {
                         this.pendingUser = socket;
                     }
                     return;
                 }
-                if (message.type === messages_1.MOVE) {
+                if (messageType === messages_1.MOVE.toUpperCase()) {
                     const game = this.games.find((game) => game.hasPlayer(socket));
                     if (game) {
                         game.makeMove(socket, message.move);
